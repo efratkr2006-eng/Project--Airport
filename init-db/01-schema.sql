@@ -12,15 +12,27 @@ CREATE TABLE EMPLOYEE (
     PRIMARY KEY (EmployeeID)
 );
 
--- 2. AIRPLANE
+
+-- 2. AIRPLANE MODEL
+CREATE TABLE AIRPLANEMODEL (
+    Model VARCHAR(100) NOT NULL,
+    Manufacturer VARCHAR(100) NOT NULL,
+    PRIMARY KEY (Model)
+);
+
+-- 3. AIRPLANE
 CREATE TABLE AIRPLANE (
     AirplaneID INT NOT NULL,
     Capacity INT NOT NULL,
     ManufacturingYear INT NOT NULL,
     Model VARCHAR(100) NOT NULL,
-    Manufacturer VARCHAR(100) NOT NULL,
-    PRIMARY KEY (AirplaneID)
+    RegistrationNumber VARCHAR(30) NOT NULL,
+    PRIMARY KEY (AirplaneID),
+    UNIQUE (RegistrationNumber),
+    FOREIGN KEY (Model)
+        REFERENCES AIRPLANEMODEL(Model)
 );
+
 
 -- 3. CHECK
 CREATE TABLE "CHECK" (
