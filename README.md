@@ -131,7 +131,8 @@ The original ERD was created using ERDPlus to show the six main entities and the
 
 This DSD depicts the **updated eight-table physical schema**, including primary and foreign keys, the `AirplaneModel` relationship, and the aircraft registration field.
 
-![Database Structure Diagram](docs/DSD.jpeg)
+![Database Structure Diagram](docs/DSD.png)
+
 
 ## 12. Stage 1 Documentation
 
