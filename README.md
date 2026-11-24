@@ -15,6 +15,7 @@
 11. [Database Structure Diagram (DSD)](#11-database-structure-diagram-dsd)
 12. [Stage 1 Documentation](#12-stage-1-documentation)
 13. [Functional Dependencies and Normalization](#13-functional-dependencies-and-normalization)
+14. [Stage A Submission](#14-stage-a-submission)
 
 ## 1. Project Overview
 
@@ -45,42 +46,47 @@ Full functional dependency and normalization explanations are provided in [Secti
 
 ## 4. Data Generation and Population
 
-Synthetic data was produced using three different methods:
+Synthetic data was originally created using **Mockaroo** (employee CSV), **Excel** (airplane CSV) and **Python** (flight/check/hazard CSV plus `psycopg` inserts for corrective actions and identifies). Extra records were then added via SQL `generate_series` to meet the revised row-count requirements. All 42,905 final records were exported as executable inserts to `שלב א/insertTables.sql`.
 
-1. **Mockaroo:** employee records exported to CSV and imported into PostgreSQL.
-2. **Excel / CSV:** aircraft records generated with Excel formulas and imported into PostgreSQL. The finalized aircraft file includes unique synthetic registration numbers; model/manufacturer combinations are stored separately in `airplanemodel_data.csv`.
-3. **Python:** scripts generated flight, inspection, and hazard CSV files. The `psycopg` library was also used to insert corrective actions and inspection-hazard relationships directly into PostgreSQL.
-
-### Record Counts — Normalized Database
+### Record counts — Stage A, verified 2026-11-24
 
 | Table | Number of records |
 |---|---:|
-| Employee | 60 |
+| Employee | 500 |
 | AirplaneModel | 5 |
-| Airplane | 120 |
-| Flight | 700 |
-| Check | 650 |
+| Airplane | 500 |
+| Flight | 20,000 |
+| CHECK | 20,000 |
 | Hazard | 550 |
 | CorrectiveAction | 600 |
 | Identifies | 750 |
-| **Total** | **3,435** |
+| **Total** | **42,905** |
 
-The original database contained 3,430 records across seven tables. Normalization introduced five model records without removing the existing 3,430 records.
+The original normalized snapshot (2026-11-16) contained 3,435 records. `AirplaneModel` is a lookup table with 5 records; clarify with the lecturer whether the 500-record rule applies to it.
 
-**Data-loading order:** import the five records in `init-db/airplanemodel_data.csv` into `AirplaneModel` **before** importing `init-db/airplane_data.csv` into `Airplane`, because the latter has a foreign key to the former. Other tables must likewise be populated in foreign-key order. The SQL schema file creates the tables; CSV import and Python population are separate steps.
+For the submission's source files and the three generation methods see **[Stage A submission](שלב%20א/README.md)** and **[data dictionary](שלב%20א/System_Specification.md)**.
 
 ## 5. Data Integrity Verification
 
-SQL queries were used to verify row counts and referential integrity for flights/aircraft, inspections/employees/aircraft, corrective actions/employees/hazards, and inspection-hazard relationships. The four original referential-integrity checks returned zero invalid references.
+The original dataset passed SQL checks for four foreign-key relationship groups with **zero invalid references**. After normalization, all 120 original airplanes were matched to their models with zero missing or mismatching model references.
 
-After normalization, a further check verified that all 120 aircraft models matched the new lookup table with zero missing model matches or manufacturer mismatches. Row counts in the normalized database were verified as shown above.
+On 2026-11-24 the expanded eight-table dataset was counted in pgAdmin and contained **42,905 rows** in the stated table distribution. A fresh local database named `EFRAT_stageA_verify` was created with `createTables.sql` and loaded successfully with `insertTables.sql`, yielding **42,905 rows**. This is a successful *local schema/data recreation*, not yet a demonstrated backup restore on a different computer.
 
 ## 6. Database Backup and Restoration
 
-- **Original backup:** `backups/EFRAT_backup.backup` — created from the original seven-table database (3,430 records). It was successfully restored into a separate database named `EFRAT_restore_test`, and the restored record counts were checked.
-- **Updated backup:** `backups/EFRAT_stage1_normalized.backup` — created successfully after the restored test database was normalized to eight tables (3,435 records). The normalized database's row counts were verified before backup.
+**Older snapshots** (for traceability):
 
-The original `EFRAT` database remains unchanged; the normalized working copy is `EFRAT_restore_test`. The updated backup has been created, but a **separate restore test of this updated backup has not yet been documented**.
+- `backups/EFRAT_backup.backup` — original 7-table dataset, 3,430 records; successfully restored locally into `EFRAT_restore_test`.
+- `backups/EFRAT_stage1_normalized.backup` — normalized snapshot with 8 tables, 3,435 records.
+
+**Updated backups — 2026-11-24, 42,905 records:**
+
+- `backups/stageA_2026-11-24_cli.backup` — created with the `pg_dump` command line.
+- `backups/stageA_2026-11-24_gui.backup` — created using pgAdmin GUI.
+
+Both updated backup commands completed successfully and their files were copied into the project. These are **two interfaces to PostgreSQL backup**, as requested (CLI and GUI). A restore of the *new* backup on **another computer** is still required by the lecturer and has not yet been documented.
+
+Screenshots are included in **[Stage A](שלב%20א/README.md#8-backups-and-recovery)**.
 
 ## 7. Technologies Used
 
@@ -88,16 +94,17 @@ PostgreSQL, pgAdmin, Docker, Python (`psycopg`), SQL, Microsoft Excel, Mockaroo,
 
 ## 8. Project Files
 
-- `init-db/01-schema.sql` — creates the eight normalized tables.
-- `init-db/airplanemodel_data.csv` — five model/manufacturer records.
-- `init-db/airplane_data.csv` — 120 aircraft records in the normalized layout.
-- `init-db/scripts/` — Python generation and population scripts.
-- `init-db/*.csv` — additional generated CSV datasets.
-- `backups/EFRAT_backup.backup` — original backup.
-- `backups/EFRAT_stage1_normalized.backup` — backup of the normalized database.
-- `docs/` — ERD, DSD, UI screenshots, and Stage 1 documentation.
+The latest stage submission is organized in **[`שלב א/`](שלב%20א/README.md)**. It includes:
 
-Database credentials are stored locally in `.env` and **must not** be committed to GitHub.
+- `createTables.sql` — 8 normalized tables; `dropTables.sql` — 8 drop commands.
+- `insertTables.sql` — 42,905 generated `INSERT` statements; `selectAll.sql` — select queries.
+- `Programing/` — existing Python sources and the incremental SQL generation script.
+- `DataImportFiles/` — CSV data files; `mockarooFiles/` — original Mockaroo employee CSV.
+- `Screenshots/` — diagrams, AI Studio prototype images, and verification/backup evidence.
+- `Backups/` — two new 2026-11-24 backup files.
+- `System_Specification.md` — screen specifications and full data dictionary.
+
+Original development files remain in `init-db/`, `docs/` and `backups/` and have not been deleted. Sensitive `.env` stays local and must not be committed.
 
 ## 9. System UI Prototype
 
@@ -543,3 +550,9 @@ AirplaneID → Model → Manufacturer
 This decomposition reduces data redundancy
 
 and helps prevent update anomalies.
+
+## 14. Stage A Submission
+
+[Open the complete Stage A submission folder](שלב%20א/README.md).
+
+The latest database state is **8 tables / 42,905 rows** (verified 2026-11-24). An updated **data dictionary**, the **four required SQL files**, method-specific source folders, screenshots and two dated backups are included. Before final submission add the student names/IDs, a real Google AI Studio link, a current ERDPlus source and separate-computer restore evidence; confirm the lookup-table row requirement and create a Git TAG.
